@@ -19,7 +19,7 @@ struct {
 struct {
     int x;
     int y;
-}tail,head,food_pos;
+}current_pos,head,food_pos;
 // =========================================================================
 void clear_screen(void);
 int read_key(void);
@@ -58,7 +58,7 @@ int main(void){
     
     //------------------------------------
     food_pos.x = 25;       food_pos.y = 25;
-    tail.x = head.x = 20;	  tail.y = head.y = 20;
+    current_pos.x = head.x = 20;	  current_pos.y = head.y = 20;
     snake.length = 5;
     snake.mem = malloc(snake.length);
     snake.mem[0] = '>';
@@ -111,7 +111,7 @@ int main(void){
 	}
 
 	incr_len_snake(width, height);
-	usleep(100000);
+	usleep(600000);
     }
     return 0;
 }
@@ -136,51 +136,50 @@ void hide_cursor(void){
 }
 
 void right(void){
-	tail.x++;
+	current_pos.x++;
 }
 
 void left(void){
-	tail.x--;
+	current_pos.x--;
 }
 void down(void){
-	tail.y++;
+	current_pos.y++;
 }
 void up(void){
-	tail.y--;
+	current_pos.y--;
 }
 
 void print_snake(int dir){
     switch(dir){
 	case RIGHT:
 	    snake.mem[0] = '>';
-	    printf("\033[%d;%dH", tail.y, tail.x);
-	    for(int j=snake.length-2;j>=0;j--){
-		printf("%c",snake.mem[j]);
+	    head.x = current_pos.x;		head.y = current_pos.y;
+	    for(int j=0, x = current_pos.x ; snake.mem[j] ; x--,j++){
+		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[j]);
 	    }
-	    head.x = tail.x + snake.length - 2;		head.y = tail.y;
 	    break;
 
 	case LEFT:
 	    snake.mem[0] = '<';
-	    printf("\033[%d;%dH", tail.y, tail.x);
+	    printf("\033[%d;%dH", current_pos.y, current_pos.x);
 	    printf("%s",snake.mem);
-	    head.x = tail.x;	head.y = tail.y;
+	    head.x = current_pos.x;	head.y = current_pos.y;
 	    break;
 	
 	case UP:
 	    snake.mem[0] = '^';
-	    for(int i=0, y=tail.y;snake.mem[i];i++,y++){
-		printf("\033[%d;%dH%c", y, tail.x, snake.mem[i]);
+	    for(int i=0, y=current_pos.y;snake.mem[i];i++,y++){
+		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
 	    }
-	    head.x = tail.x;	head.y = tail.y;
+	    head.x = current_pos.x;	head.y = current_pos.y;
 	    break;
 	
 	case DOWN:
 	    snake.mem[0] = 'v';
-	    for(int i=snake.length-2, y=tail.y; i>=0 ;i--,y++){
-		printf("\033[%d;%dH%c", y, tail.x, snake.mem[i]);
+	    for(int i=0, y=current_pos.y; snake.mem[i] ;i++,y--){
+		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
 	    }
-	    head.x = tail.x;	head.y = tail.y + snake.length-2;
+	    head.x = current_pos.x;	head.y = current_pos.y + snake.length-2;
 	    break;
     }
 }
