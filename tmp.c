@@ -19,12 +19,11 @@ struct {
 struct {
     int x;
     int y;
-}current_pos,head,food_pos;
+}current_pos,food_pos;
 // =========================================================================
 void clear_screen(void);
 int read_key(void);
 void hide_cursor(void);
-void print_snake(int);
 void right(void);
 void left(void);
 void up(void);
@@ -58,7 +57,7 @@ int main(void){
     
     //------------------------------------
     food_pos.x = 25;       food_pos.y = 25;
-    current_pos.x = head.x = 20;	  current_pos.y = head.y = 20;
+    current_pos.x = current_pos.y = 20;
     snake.length = 5;
     snake.mem = malloc(snake.length);
     snake.mem[0] = '>';
@@ -94,24 +93,19 @@ int main(void){
 	switch(key_pressed){
 	    case RIGHT:
 		right();
-		print_snake(RIGHT);
 		break;
 	    case LEFT:
 		left();
-		print_snake(LEFT);
 		break;
 	    case UP:
 		up();
-		print_snake(UP);
 		break;
 	    case DOWN:
 		down();
-		print_snake(DOWN);
 		break;
 	}
 
 	incr_len_snake(width, height);
-	usleep(600000);
     }
     return 0;
 }
@@ -136,52 +130,45 @@ void hide_cursor(void){
 }
 
 void right(void){
-	current_pos.x++;
+    current_pos.x++;
+    snake.mem[0] = '>';
+    for(int j=0, x = current_pos.x ; snake.mem[j] ; x--,j++){
+	printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[j]);
+	fflush(stdout);
+	usleep(20000);
+    }
 }
 
 void left(void){
-	current_pos.x--;
+    current_pos.x--;
+    snake.mem[0] = '<';
+    printf("\033[%d;%dH", current_pos.y, current_pos.x);
+    for(int i=0;snake.mem[i];i++){
+	printf("%c",snake.mem[i]);
+	fflush(stdout);
+	usleep(20000);
+    }
+
 }
 void down(void){
-	current_pos.y++;
+    current_pos.y++;
+    snake.mem[0] = 'v';
+    for(int i=0, y=current_pos.y; snake.mem[i] ;i++,y--){
+	printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
+	fflush(stdout);
+	usleep(20000);
+    }
+
 }
 void up(void){
-	current_pos.y--;
-}
-
-void print_snake(int dir){
-    switch(dir){
-	case RIGHT:
-	    snake.mem[0] = '>';
-	    head.x = current_pos.x;		head.y = current_pos.y;
-	    for(int j=0, x = current_pos.x ; snake.mem[j] ; x--,j++){
-		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[j]);
-	    }
-	    break;
-
-	case LEFT:
-	    snake.mem[0] = '<';
-	    printf("\033[%d;%dH", current_pos.y, current_pos.x);
-	    printf("%s",snake.mem);
-	    head.x = current_pos.x;	head.y = current_pos.y;
-	    break;
-	
-	case UP:
-	    snake.mem[0] = '^';
-	    for(int i=0, y=current_pos.y;snake.mem[i];i++,y++){
-		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
-	    }
-	    head.x = current_pos.x;	head.y = current_pos.y;
-	    break;
-	
-	case DOWN:
-	    snake.mem[0] = 'v';
-	    for(int i=0, y=current_pos.y; snake.mem[i] ;i++,y--){
-		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
-	    }
-	    head.x = current_pos.x;	head.y = current_pos.y + snake.length-2;
-	    break;
+    current_pos.y--;
+    snake.mem[0] = '^';
+    for(int i=0, y=current_pos.y;snake.mem[i];i++,y++){
+	printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
+	fflush(stdout);
+	usleep(20000);
     }
+
 }
 
 void print_food(void){
@@ -190,7 +177,7 @@ void print_food(void){
 }
 
 void incr_len_snake(int width,int height){
-    if(food_pos.x != head.x || food_pos.y != head.y)
+    if(food_pos.x != current_pos.x || food_pos.y != current_pos.y)
 	return;
 
     snake.mem[snake.length-1] = '*';
