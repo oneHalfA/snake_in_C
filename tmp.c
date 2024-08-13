@@ -169,16 +169,18 @@ void print_snake(int dir){
 	
 	case UP:
 	    snake.mem[0] = '^';
-	    printf("\033[%d;%dH", tail.y, tail.x);
-	    printf("%s",snake.mem);
+	    for(int i=0, y=tail.y;snake.mem[i];i++,y++){
+		printf("\033[%d;%dH%c", y, tail.x, snake.mem[i]);
+	    }
 	    head.x = tail.x;	head.y = tail.y;
 	    break;
 	
 	case DOWN:
 	    snake.mem[0] = 'v';
-	    printf("\033[%d;%dH", tail.y, tail.x);
-	    printf("%s",snake.mem);
-	    head.x = tail.x;	head.y = tail.y;
+	    for(int i=snake.length-2, y=tail.y; i>=0 ;i--,y++){
+		printf("\033[%d;%dH%c", y, tail.x, snake.mem[i]);
+	    }
+	    head.x = tail.x;	head.y = tail.y + snake.length-2;
 	    break;
     }
 }
