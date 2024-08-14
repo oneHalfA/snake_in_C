@@ -11,23 +11,28 @@
 #define LEFT 68
 #define DOWN 66
 #define UP 65
-struct {
-    size_t length;
-    char *mem;
-} snake;
 
-struct coord{
+struct coordinate{
     int x;
     int y;
-}current_pos,food_pos;
+}food_pos;
+
+typedef struct snake_cell{
+    struct coordinate pos;
+    char chr;
+    struct snake_cell* next;
+    struct snake_cell* prev;
+}cell;
 // =========================================================================
+struct snake_cell* create(char, int, int);
+void add_end(cell*,cell*);
 void clear_screen(void);
 int read_key(void);
 void hide_cursor(void);
-void right(struct coord,int);
-void left(struct coord,int);
-void up(struct coord,int);
-void down(struct coord,int);
+void right(cell*);
+void left(cell*);
+void up(cell*);
+void down(cell*);
 void print_food(void);
 void incr_len_snake(int, int);
 // =========================================================================
@@ -57,21 +62,13 @@ int main(void){
     
     //------------------------------------
     food_pos.x = 25;       food_pos.y = 25;
-    current_pos.x = current_pos.y = 20;
-    struct coord changed_dir;
-    snake.length = 8;
-    snake.mem = malloc(snake.length);
-    snake.mem[1] = '*';
-    snake.mem[2] = '*';
-    snake.mem[3] = '*';
-    snake.mem[4] = '*';
-    snake.mem[5] = '*';
-    snake.mem[6] = '*';
-    snake.mem[7] = '\0';
+    
+    cell* head = create('>',20,20);
+    add_end(head,create('*',0,0));
+    add_end(head,create('*',0,0));
 
     int chr,
-	key_pressed = LEFT, // default is RIGHT
-	pre_command;
+	key_pressed = RIGHT; // default is RIGHT
 
     clear_screen();
     printf("PRESS `q` TO EXIT\nMOVE BY ← ↑ → ↓\n");
@@ -81,9 +78,7 @@ int main(void){
     while(1){
 	chr = read_key();
 	
-	if(chr != EOF && (chr == RIGHT || chr == LEFT || chr == DOWN || chr == UP )){
-	    pre_command = key_pressed;
-	    changed_dir.x = current_pos.x;	changed_dir.y = current_pos.y;
+	if(chr != EOF && (chr == RIGHT || chr == LEFT || chr == DOWN || chr == UP || chr == 'q')){
 	    key_pressed = chr;
 	}
 
@@ -96,24 +91,30 @@ int main(void){
 	}
 	switch(key_pressed){
 	    case RIGHT:
-		right(changed_dir,pre_command);
+		right(head);
+		head->pos.x++;
 		break;
 	    case LEFT:
-		left(changed_dir,pre_command);
+		left(head);
+		head->pos.x--;
 		break;
 	    case UP:
-		up(changed_dir,pre_command);
+		up(head);
+		head->pos.y--;
 		break;
 	    case DOWN:
-		down(changed_dir,pre_command);
+		down(head);
+		head->pos.y++;
 		break;
 	}
 
-	incr_len_snake(width, height);
+	usleep(150000);
+	//incr_len_snake(width, height);
     }
+
     return 0;
 }
-// =========================================================================
+// ========================================================================
 void clear_screen(void){
 	printf("%s[2J%s[H",ESC,ESC);
 }
@@ -133,158 +134,80 @@ void hide_cursor(void){
     printf("%s[?25l",ESC);
 }
 
-void right(struct coord changed_dir,int pre_command){
-    current_pos.x++;
-    
-    int round = current_pos.x - changed_dir.x;
-    int i=0;
-    
-    snake.mem[0] = '>';
-    
-    /*for(int j=0, x = current_pos.x, y = current_pos.y ; snake.mem[j] ; x--,j++){
-	printf("\033[%d;%dH%c", y, x, snake.mem[j]);
-	fflush(stdout);
-    }
-    usleep(25000);*/
-
-    switch(pre_command){
-	case UP:
-	    for(int x = current_pos.x; i < round; x--,i++){
-		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int x = changed_dir.x, y = changed_dir.y ; snake.mem[i];y++,i++){
-		printf("\033[%d;%dH%c",y,x,snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-
-	case DOWN:
-	    for(int x = current_pos.x; i < round; x--,i++){
-		printf("\033[%d;%dH%c",current_pos.y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int x =changed_dir.x, y=changed_dir.y;snake.mem[i];y--,i++){
-		printf("\033[%d;%dH%c",y,x,snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-
-	default:
-	    i = 0;
-	    for(int x = current_pos.x; snake.mem[i]; x--,i++){
-		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-    }
-
+struct snake_cell* create(char chr,int y,int x){
+    cell* tmp = (cell*) malloc(sizeof(cell));
+    tmp->chr = chr;
+    tmp->next = tmp->prev = NULL;
+    tmp->pos.x = x;	tmp->pos.y = y;
+    return tmp;
 }
 
-void left(struct coord changed_dir,int pre_command){
-    current_pos.x--;
+void add_end(cell* head,cell* new){
+    cell* tmp = head;
+    while(tmp->next)
+	tmp = tmp->next;
+    tmp->next = new;
+    new->prev = tmp;
+}
 
-    int round = changed_dir.x - current_pos.x;
-    int i=0;
+void right(cell* head){
+   
+    cell* tmp = head;
+    head->chr = '>';
 
-    snake.mem[0] = '<';
-    switch(pre_command){
-	case UP:
-	    for(int x = current_pos.x;i<round;i++,x++){
-		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int x = changed_dir.x, y = changed_dir.y ; snake.mem[i] ;y++,i++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-	case DOWN:
-	    for(int x = current_pos.x;i<round;i++,x++){
-		printf("\033[%d;%dH%c", current_pos.y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int x = changed_dir.x, y = changed_dir.y ; snake.mem[i] ;y--,i++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-	default:
-	    printf("\033[%d;%dH", current_pos.y, current_pos.x);
-	    for(i=0;snake.mem[i];i++){
-		printf("%c",snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
+    for(;head;head=head->next)
+       printf("\033[%d;%dH%c", head->pos.y, head->pos.x,head->chr);
+    
+    for(;tmp->next;tmp=tmp->next);
+    for(;tmp->prev;tmp=tmp->prev){
+	tmp->pos.y = tmp->prev->pos.y;
+	tmp->pos.x = tmp->prev->pos.x;
+    }
+       
+}
+
+void left(cell* head){
+
+    cell* tmp = head;
+    head->chr = '<';
+
+    for(;head;head=head->next)
+       printf("\033[%d;%dH%c", head->pos.y, head->pos.x,head->chr);
+    
+    for(;tmp->next;tmp=tmp->next);
+    for(;tmp->prev;tmp=tmp->prev){
+	tmp->pos.y = tmp->prev->pos.y;
+	tmp->pos.x = tmp->prev->pos.x;
     }
 }
 
-void down(struct coord changed_dir,int pre_command){
-    current_pos.y++;
-    int round = current_pos.y - changed_dir.y;
-    int i = 0;
-    snake.mem[0] = 'v';
-    switch(pre_command){
-	case RIGHT:
-	    for(int y=current_pos.y; i<round ;i++,y--){
-		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int y = changed_dir.y, x = changed_dir.x; snake.mem[i] ;i++,x--){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
-	case LEFT:
-	    for(int y=current_pos.y; i<round ;i++,y--){
-		printf("\033[%d;%dH%c", y, current_pos.x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int y=changed_dir.y,x=changed_dir.x; snake.mem[i] ;i++,x++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
+void down(cell* head){
+
+    cell* tmp = head;
+    head->chr = 'v';
+
+    for(;head;head=head->next)
+       printf("\033[%d;%dH%c", head->pos.y, head->pos.x,head->chr);
+    
+    for(;tmp->next;tmp=tmp->next);
+    for(;tmp->prev;tmp=tmp->prev){
+	tmp->pos.y = tmp->prev->pos.y;
+	tmp->pos.x = tmp->prev->pos.x;
     }
 }
 
-void up(struct coord changed_dir,int pre_command){
-    current_pos.y--;
-    int round = changed_dir.y - current_pos.y;
-    int i=0;
-    snake.mem[0] = '^';
-    switch(pre_command){
-	case RIGHT:
-	    for(int y = current_pos.y, x=current_pos.x;i<round;i++,y++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int y = changed_dir.y, x = changed_dir.x ;snake.mem[i];i++,x--){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
+void up(cell* head){
 
-	case LEFT:
-	    for(int y = current_pos.y, x = current_pos.x;i<round;i++,y++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    for(int y = changed_dir.y, x = changed_dir.x ;snake.mem[i];i++,x++){
-		printf("\033[%d;%dH%c", y, x, snake.mem[i]);
-		fflush(stdout);
-	    }
-	    usleep(95000);
-	    break;
+    cell* tmp = head;
+    head->chr = '^';
+
+    for(;head;head=head->next)
+       printf("\033[%d;%dH%c", head->pos.y, head->pos.x,head->chr);
+    
+    for(;tmp->next;tmp=tmp->next);
+    for(;tmp->prev;tmp=tmp->prev){
+	tmp->pos.y = tmp->prev->pos.y;
+	tmp->pos.x = tmp->prev->pos.x;
     }
 }
 
@@ -294,13 +217,8 @@ void print_food(void){
 }
 
 void incr_len_snake(int width,int height){
-    if(food_pos.x != current_pos.x || food_pos.y != current_pos.y)
-	return;
 
-    snake.mem[snake.length-1] = '*';
-    snake.mem[(++snake.length) - 1] = 0;
     srand(time(NULL));
     food_pos.x = rand() % width;
     food_pos.y = rand() % height;
 }
-
