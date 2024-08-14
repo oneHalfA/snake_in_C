@@ -135,7 +135,7 @@ int read_key(void){
 }
 
 void hide_cursor(void){
-    printf("%s[?25l",ESC);
+    printf("\033[?25l");
 }
 
 struct snake_cell* create(char chr,int y,int x){
