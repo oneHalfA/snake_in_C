@@ -34,7 +34,8 @@ void left(cell*);
 void up(cell*);
 void down(cell*);
 void print_food(void);
-void incr_len_snake(int, int);
+void increase_len_snake(int, int, cell*);
+int game_over(cell*,int ,int);
 // =========================================================================
 int main(void){
 
@@ -66,6 +67,10 @@ int main(void){
     cell* head = create('>',20,20);
     add_end(head,create('*',0,0));
     add_end(head,create('*',0,0));
+    add_end(head,create('*',0,0));
+    add_end(head,create('*',0,0));
+    add_end(head,create('*',0,0));
+    add_end(head,create('*',0,0));
 
     int chr,
 	key_pressed = RIGHT; // default is RIGHT
@@ -83,6 +88,12 @@ int main(void){
 	}
 
 	clear_screen();
+	if(game_over(head,width,height)){
+	    clear_screen();
+	    printf("GAME OVER\n");
+	    return 0;
+
+	}
 	print_food();
 	
 	if(key_pressed == 'q'){
@@ -109,7 +120,7 @@ int main(void){
 	}
 
 	usleep(150000);
-	//incr_len_snake(width, height);
+	increase_len_snake(width, height, head);
     }
 
     return 0;
@@ -216,9 +227,23 @@ void print_food(void){
     printf("+");
 }
 
-void incr_len_snake(int width,int height){
-
+void increase_len_snake(int width,int height, cell* head){
+    if(food_pos.x != head->pos.x || food_pos.y != head->pos.y)
+	return;
+    
+    add_end(head,create('*',0,0));
     srand(time(NULL));
     food_pos.x = rand() % width;
     food_pos.y = rand() % height;
+}
+
+int game_over(cell* head,int width,int height){
+    if(head->pos.x == width || head->pos.y == height || head->pos.x == 0 || head->pos.y == height)
+	return 1;
+    for(cell* tmp = head->next;tmp;tmp=tmp->next){
+	if(head->pos.x == tmp->pos.x && head->pos.y == tmp->pos.y){
+	    return 1;
+	}
+    }
+    return 0;
 }
