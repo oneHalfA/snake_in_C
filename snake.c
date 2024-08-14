@@ -48,8 +48,7 @@ int main(void){
     
     // non-blocking mode of terminal
     int old_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK); /*set to non-blocking mode which make terminal not to wait for user input,
-							    and functions like read returns -1 and getchar/getc return EOF(typically -1)*/
+    fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK); /*set to non-blocking mode which make terminal not to wait for user input,*/
     // getting terminal winodw size
     struct winsize ws;
     int width, height;
