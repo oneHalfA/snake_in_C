@@ -6,7 +6,6 @@
 #include <time.h>
 #include <fcntl.h>
 
-#define ESC "\x1B"
 #define RIGHT 67
 #define LEFT 68
 #define DOWN 66
@@ -65,11 +64,6 @@ int main(void){
     
     cell* head = create('>',20,20);
     add_end(head,create('*',0,0));
-    add_end(head,create('*',0,0));
-    add_end(head,create('*',0,0));
-    add_end(head,create('*',0,0));
-    add_end(head,create('*',0,0));
-    add_end(head,create('*',0,0));
 
     int chr,
 	key_pressed = RIGHT; // default is RIGHT
@@ -96,7 +90,7 @@ int main(void){
 	print_food();
 	
 	if(key_pressed == 'q'){
-	    printf("%s[0;0HABORTED\n",ESC);
+	    printf("\033[0;0HABORTED\n");
 	    return 0;
 	}
 	switch(key_pressed){
@@ -126,7 +120,7 @@ int main(void){
 }
 // ========================================================================
 void clear_screen(void){
-	printf("%s[2J%s[H",ESC,ESC);
+	printf("\033[2J\033[H");
 }
 
 int read_key(void){
